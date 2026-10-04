@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+    html{
+      font-family:outfit;
+    }body{
+      background-color:black;
+      color:white;
+    }
+    </style>
+</head>
+<body>
+<h1>Compare a player with all players in the top 100 elo</h1>
+  <input type="text" placeholder="Enter username of player" id="player"/>
+  <button onclick="get()">Enter</button>
+<ol id="rankedLB">  
+</ol>
+  <p id="loading"></p>
+  <script>
+async function get() {
+  list = document.getElementById("rankedLB")
+  while (list.hasChildNodes()) {
+    list.removeChild(list.firstChild);
+  }
+  let comparisonLB = []
+  const username = document.getElementById("player").value
+  console.log(username)
+  let loadProgress = document.getElementById("loading").innerText
+  loadProgress = "Loading 0/100"
+  const response = await fetch("https://api.mcsrranked.com/leaderboard", {
+    cache: "no-store" 
+  })
+  if (!response.ok) {
+    throw new Error(`Response status: ${response.status}`);
+  }
+  
+  const result = await response.json();
+  for (let i = 0; i < 100; i++) {
+    document.getElementById("loading").innerText = `Loading ${i}/100`
+    if(username.toLowerCase() === result.data.users[i].nickname.toLowerCase()){
+      comparisonLB[i] = ("")
+    }else{
+      const response = await fetch(`https://api.mcsrranked.com/users/${username}/versus/${result.data.users[i].nickname}/`)/*, {
+        cache: "no-store" 
+      })*/
+      if (!response.ok) {
+        throw new Error(`Response status: ${response.status}`);
+      }
+      const answer = await response.json();
+      let opp;
+      let userPlayer;
+      if(answer.data.players[0].nickname == username){
+        userPlayer = answer.data.players[0].uuid
+        opp = answer.data.players[1].uuid
+      }else{
+        userPlayer = answer.data.players[1].uuid
+        opp = answer.data.players[0].uuid
+      }
+      let oppPoints = answer.data.results.ranked[opp]
+      let userPoints = answer.data.results.ranked[userPlayer]
+      comparisonLB[i] = ({playerScore: userPoints, oppScore: oppPoints, opp:result.data.users[i].nickname})
+    }
+    //console.log(comparisonLB)
+  }
+  for (let j = 0; j < 100; j++){
+    if(username.toLowerCase() === result.data.users[j].nickname.toLowerCase()){
+      ;
+    }else{
+      const player = document.createElement("li")
+      player.innerText = `${username}: ${comparisonLB[j].playerScore} - ${comparisonLB[j].opp}: ${comparisonLB[j].oppScore}`
+      document.getElementById("rankedLB").appendChild(player);
+    }
+  } 
+}
+
+</script>
+</body>
+</html>
