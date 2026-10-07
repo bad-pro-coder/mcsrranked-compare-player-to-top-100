@@ -51,7 +51,7 @@ async function get() {
       const answer = await response.json();
       let opp;
       let userPlayer;
-      if(answer.data.players[0].nickname == username){
+      if(answer.data.players[0].nickname.toLowerCase() == username.toLowerCase()){
         userPlayer = answer.data.players[0].uuid
         opp = answer.data.players[1].uuid
       }else{
